@@ -1,6 +1,10 @@
 import curses
 from .color import Color
-from .utils import get_longest_list_in_dict, list_of_dicts_to_dict_of_lists
+from .utils import (
+    get_longest_list_in_dict,
+    list_of_dicts_to_dict_of_lists,
+    is_dict_subset_in_list_of_dicts,
+)
 
 
 class Table:
@@ -19,6 +23,7 @@ class Table:
     def make_columns(self):
         color = Color()
         xstart = 0
+        hl_row_data = {}
         for title, items in self.columns.items():
             title_length = len(title)
             longest_item = len(max(items, key=len))
@@ -39,6 +44,7 @@ class Table:
                 if itemnum == self.hl:
                     items_win.addstr(itemnum, 0, item)
                     items_win.chgat(itemnum, 0, color.white_magenta_bold)
+                    hl_row_data[title] = item
                 else:
                     items_win.addstr(itemnum, 0, item)
                 items_win.noutrefresh(
@@ -49,9 +55,11 @@ class Table:
             curses.doupdate()
             xstart += width
 
+        return hl_row_data
+
     def init(self):
         while True:
-            self.make_columns()
+            hl_row_data = self.make_columns()
             key = self.stdscr.getch()
             if key == ord("q"):
                 break
@@ -62,10 +70,4 @@ class Table:
                 if self.hl > 0:
                     self.hl -= 1
             elif key == ord("\n"):
-                first_key = next(iter(self.columns))
-                first_value = self.columns[first_key][self.hl]
-                return next(
-                    (item for item in self.list_of_dicts
-                     if item[first_key] == first_value),
-                    None
-                )
+                return is_dict_subset_in_list_of_dicts(self.list_of_dicts, hl_row_data)
