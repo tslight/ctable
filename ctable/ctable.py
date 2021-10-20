@@ -7,7 +7,7 @@ class Table:
     def __init__(self, stdscr, list_of_dicts, column_order):
         self.stdscr = stdscr
         self.hl = 0
-        self.list_dicts = list_of_dicts
+        self.list_of_dicts = list_of_dicts
         self.column_order = column_order
         self.columns = list_of_dicts_to_dict_of_lists(
             self.list_of_dicts, self.column_order
@@ -62,4 +62,10 @@ class Table:
                 if self.hl > 0:
                     self.hl -= 1
             elif key == ord("\n"):
-                return self.columns["Name"][self.hl]
+                first_key = next(iter(self.columns))
+                first_value = self.columns[first_key][self.hl]
+                return next(
+                    (item for item in self.list_of_dicts
+                     if item[first_key] == first_value),
+                    None
+                )
