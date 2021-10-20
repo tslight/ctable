@@ -21,7 +21,7 @@ def get_args():
     return parser.parse_args()
 
 
-def get_dictionary(stdscr, data, columns=None):
+def init_table(stdscr, data, columns=None):
     if columns:
         columns = columns
     else:
@@ -29,6 +29,8 @@ def get_dictionary(stdscr, data, columns=None):
 
     return Table(stdscr, data, columns).init()
 
+def show_table(data, columns):
+    return curses.wrapper(init_table, data, columns)
 
 def main():
     args = get_args()
@@ -38,7 +40,7 @@ def main():
     else:
         data = ast.literal_eval(args.data)
 
-    print(curses.wrapper(get_dictionary, data, args.columns))
+    print(show_table(data, args.columns))
 
 
 if __name__ == "__main__":
