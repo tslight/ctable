@@ -30,3 +30,7 @@ def is_dict_subset_in_list_of_dicts(list_of_dicts, dictionary):
         # https://stackoverflow.com/a/41579450
         if dictionary.items() <= d.items():
             return d
+
+
+def length_of_strings_or_ints(element):
+    return len(str(element))

@@ -4,6 +4,7 @@ from .utils import (
     get_longest_list_in_dict,
     list_of_dicts_to_dict_of_lists,
     is_dict_subset_in_list_of_dicts,
+    length_of_strings_or_ints,
 )
 
 
@@ -26,7 +27,7 @@ class Table:
         hl_row_data = {}
         for title, items in self.columns.items():
             title_length = len(title)
-            longest_item = len(max(items, key=len))
+            longest_item = len(max(items, key=length_of_strings_or_ints))
             width = max(title_length, longest_item) + 1
             title_win = curses.newwin(1, width, 0, xstart)
             title_win.bkgd(" ", color.white_blue)
@@ -42,11 +43,11 @@ class Table:
 
             for item in items:
                 if itemnum == self.hl:
-                    items_win.addstr(itemnum, 0, item)
+                    items_win.addstr(itemnum, 0, str(item))
                     items_win.chgat(itemnum, 0, color.white_magenta_bold)
                     hl_row_data[title] = item
                 else:
-                    items_win.addstr(itemnum, 0, item)
+                    items_win.addstr(itemnum, 0, str(item))
                 items_win.noutrefresh(
                     pminrow, 0, 1, xstart, curses.LINES - 1, xstart + width
                 )
