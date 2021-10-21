@@ -19,7 +19,7 @@ def list_of_dicts_to_dict_of_lists(list_of_dicts, key_order):
     return {k: columns[k] for k in key_order}
 
 
-def is_dict_subset_in_list_of_dicts(list_of_dicts, dictionary):
+def dict_from_list_of_dicts(list_of_dicts, dictionary):
     """
     Check a list of dictionaries to see if another dictionary is a subset of
     any of those dictionaries.

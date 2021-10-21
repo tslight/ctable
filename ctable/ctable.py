@@ -4,7 +4,7 @@ from .color import Color
 from .utils import (
     get_longest_list_in_dict,
     list_of_dicts_to_dict_of_lists,
-    is_dict_subset_in_list_of_dicts,
+    dict_from_list_of_dicts,
     length_of_strings_or_ints,
 )
 from os import environ
@@ -22,7 +22,15 @@ class Table:
             self.list_of_dicts, self.column_order
         )
         self.longest_column_length = get_longest_list_in_dict(self.columns)
-        self.stdscr.refresh()
+        self.keys = {
+            "j, n, DOWN": "Move down a line.",
+            "k, p, UP": "Move up a line.",
+            "g, <, HOME": "Go to first row.",
+            "G, >, END": "Go to last row.",
+            "ENTER/RETURN": "View row data.",
+            "q, ESCAPE": "Exit.",
+        }
+        curses.curs_set(False) # no cursor
 
     def get_column_widths(self):
         column_widths = []
@@ -42,7 +50,6 @@ class Table:
         return column_widths
 
     def make_columns(self):
-        curses.curs_set(0)
         color = Color()
         xstart = 0
         hl_row_data = {}
@@ -62,7 +69,7 @@ class Table:
             except (curses.error):
                 pass
 
-            title_win.refresh()
+            title_win.noutrefresh()
             items_win = curses.newpad(self.longest_column_length, width)
 
             itemnum = 0
@@ -105,8 +112,28 @@ class Table:
 
         return hl_row_data
 
+    def view_dict(self, d):
+        win = curses.newwin(self.maxy, self.maxx, 0, 0)
+        for index, (key, value) in enumerate(d.items()):
+            win.addstr(index, 0, f"{key}: {value}")
+            win.noutrefresh()
+        curses.doupdate()
+
+    def init_dict_view(self, d):
+        while True:
+            self.stdscr.noutrefresh()
+            self.view_dict(d)
+            key = self.stdscr.getch()
+            if key == ord("q") or key == curses.ascii.ESC:
+                self.stdscr.erase()
+                break
+            elif key == curses.KEY_RESIZE:
+                self.maxy, self.maxx = self.stdscr.getmaxyx()
+                self.stdscr.erase()
+
     def init(self):
         while True:
+            self.stdscr.noutrefresh()
             hl_row_data = self.make_columns()
             key = self.stdscr.getch()
             if key == ord("q") or key == curses.ascii.ESC:
@@ -114,8 +141,6 @@ class Table:
             elif key == curses.KEY_RESIZE:
                 self.maxy, self.maxx = self.stdscr.getmaxyx()
                 self.stdscr.erase()
-                hl_row_data = self.make_columns()
-                self.stdscr.refresh()
             elif key == ord("j") or key == curses.KEY_DOWN or key == ord("n"):
                 if self.hl <= self.longest_column_length - 2:
                     self.hl += 1
@@ -127,4 +152,10 @@ class Table:
             elif key == ord("G") or key == ord(">") or key == curses.KEY_END:
                 self.hl = self.longest_column_length - 1
             elif key == ord("\n"):
-                return is_dict_subset_in_list_of_dicts(self.list_of_dicts, hl_row_data)
+                self.init_dict_view(
+                    dict_from_list_of_dicts(
+                        self.list_of_dicts, hl_row_data
+                    )
+                )
+            elif key == ord("?"):
+                self.init_dict_view(self.keys)
