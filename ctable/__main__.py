@@ -1,5 +1,6 @@
 import ast
 import curses
+import json
 from argparse import ArgumentParser
 from .ctable import Table
 
@@ -38,7 +39,8 @@ def main():
     if type(args.data) == list:
         data = args.data
     else:
-        data = ast.literal_eval(args.data)
+        # data = ast.literal_eval(args.data)
+        data = json.loads(args.data)
 
     print(show_table(data, args.columns))
 
