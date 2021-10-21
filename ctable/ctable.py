@@ -6,6 +6,8 @@ from .utils import (
     is_dict_subset_in_list_of_dicts,
     length_of_strings_or_ints,
 )
+from os import environ
+environ.setdefault("ESCDELAY", "12")  # otherwise it takes an age!
 
 
 class Table:
@@ -34,7 +36,7 @@ class Table:
 
         while total_width > self.maxx:
             column_widths[column_widths.index(max(column_widths))] -= 1
-            total_width -=1
+            total_width -= 1
 
         return column_widths
 
@@ -106,17 +108,17 @@ class Table:
         while True:
             hl_row_data = self.make_columns()
             key = self.stdscr.getch()
-            if key == ord("q"):
+            if key == ord("q") or curses.ascii.ESC:
                 break
             elif key == curses.KEY_RESIZE:
                 self.maxy, self.maxx = self.stdscr.getmaxyx()
                 self.stdscr.erase()
                 hl_row_data = self.make_columns()
                 self.stdscr.refresh()
-            elif key == ord("j"):
+            elif key == ord("j") or curses.KEY_DOWN:
                 if self.hl <= self.longest_column_length - 2:
                     self.hl += 1
-            elif key == ord("k"):
+            elif key == ord("k") or curses.KEY_UP:
                 if self.hl > 0:
                     self.hl -= 1
             elif key == ord("\n"):
