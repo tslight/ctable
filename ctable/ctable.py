@@ -20,19 +20,42 @@ class Table:
         )
         self.longest_column_length = get_longest_list_in_dict(self.columns)
         self.stdscr.refresh()
-        curses.curs_set(0)
 
-    def make_columns(self):
-        color = Color()
-        xstart = 0
-        hl_row_data = {}
+    def get_column_widths(self):
+        column_widths = []
+
         for title, items in self.columns.items():
             title_length = len(title)
             longest_item = len(str(max(items, key=length_of_strings_or_ints)))
             width = max(title_length, longest_item) + 1
+            column_widths.append(width)
+
+        total_width = sum(column_widths)
+
+        while total_width > self.maxx:
+            column_widths[column_widths.index(max(column_widths))] -= 1
+            total_width -=1
+
+        return column_widths
+
+    def make_columns(self):
+        curses.curs_set(0)
+        color = Color()
+        xstart = 0
+        hl_row_data = {}
+        column_widths = self.get_column_widths()
+        for index, (title, items) in enumerate(self.columns.items()):
+            width = column_widths[index]
+            titlestr = str(title).encode("ascii", "ignore").decode()
+            if len(titlestr) >= width:
+                titlestr = f"{title[:width - 2]}.."
             title_win = curses.newwin(1, width, 0, xstart)
             title_win.bkgd(" ", color.white_blue)
-            title_win.addstr(0, 0, title)
+            try:
+                title_win.addstr(0, 0, titlestr)
+            except (curses.error):
+                pass
+
             title_win.refresh()
             items_win = curses.newpad(self.longest_column_length, width)
 
@@ -43,17 +66,27 @@ class Table:
                 pminrow = self.hl - curses.LINES + 3
 
             for item in items:
+                cellstr = str(item).encode("ascii", "ignore").decode()
+
+                if len(cellstr) >= width:
+                    cellstr = f"{cellstr[:width - 2]}.."
+
+                try:
+                    items_win.addstr(itemnum, 0, cellstr)
+                except (curses.error):
+                    pass
 
                 if itemnum == self.hl:
-                    items_win.addstr(itemnum, 0, str(item))
                     items_win.chgat(itemnum, 0, color.white_magenta_bold)
                     hl_row_data[title] = item
-                else:
-                    items_win.addstr(itemnum, 0, str(item))
 
-                items_win.noutrefresh(
-                    pminrow, 0, 1, xstart, self.maxy - 2, self.maxx - 1
-                )
+                try:
+                    items_win.noutrefresh(
+                        pminrow, 0, 1, xstart, self.maxy - 2, self.maxx - 1
+                    )
+                except (curses.error):
+                    pass
+
                 itemnum += 1
 
             xstart += width
@@ -72,6 +105,11 @@ class Table:
             key = self.stdscr.getch()
             if key == ord("q"):
                 break
+            elif key == curses.KEY_RESIZE:
+                self.stdscr.erase()
+                self.maxy, self.maxx = self.stdscr.getmaxyx()
+                hl_row_data = self.make_columns()
+                self.stdscr.refresh()
             elif key == ord("j"):
                 if self.hl <= self.longest_column_length - 2:
                     self.hl += 1
