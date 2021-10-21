@@ -1,4 +1,5 @@
 import curses
+import curses.ascii
 from .color import Color
 from .utils import (
     get_longest_list_in_dict,
@@ -108,18 +109,22 @@ class Table:
         while True:
             hl_row_data = self.make_columns()
             key = self.stdscr.getch()
-            if key == ord("q") or curses.ascii.ESC:
+            if key == ord("q") or key == curses.ascii.ESC:
                 break
             elif key == curses.KEY_RESIZE:
                 self.maxy, self.maxx = self.stdscr.getmaxyx()
                 self.stdscr.erase()
                 hl_row_data = self.make_columns()
                 self.stdscr.refresh()
-            elif key == ord("j") or curses.KEY_DOWN:
+            elif key == ord("j") or key == curses.KEY_DOWN:
                 if self.hl <= self.longest_column_length - 2:
                     self.hl += 1
-            elif key == ord("k") or curses.KEY_UP:
+            elif key == ord("k") or key == curses.KEY_UP:
                 if self.hl > 0:
                     self.hl -= 1
+            elif key == ord("g") or key == ord("<") or key == curses.KEY_HOME:
+                self.hl = 0
+            elif key == ord("G") or key == ord(">") or key == curses.KEY_END:
+                self.hl = self.longest_column_length - 1
             elif key == ord("\n"):
                 return is_dict_subset_in_list_of_dicts(self.list_of_dicts, hl_row_data)
