@@ -68,7 +68,7 @@ class Table:
             itemnum = 0
             pminrow = 0
 
-            if self.hl > self.maxy - 2:
+            if self.hl > self.maxy - 3:
                 pminrow = self.hl - self.maxy + 3
 
             for item in items:
@@ -116,10 +116,10 @@ class Table:
                 self.stdscr.erase()
                 hl_row_data = self.make_columns()
                 self.stdscr.refresh()
-            elif key == ord("j") or key == curses.KEY_DOWN:
+            elif key == ord("j") or key == curses.KEY_DOWN or key == ord("n"):
                 if self.hl <= self.longest_column_length - 2:
                     self.hl += 1
-            elif key == ord("k") or key == curses.KEY_UP:
+            elif key == ord("k") or key == curses.KEY_UP or key == ord("p"):
                 if self.hl > 0:
                     self.hl -= 1
             elif key == ord("g") or key == ord("<") or key == curses.KEY_HOME:
