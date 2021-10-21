@@ -9,8 +9,9 @@ from .utils import (
 
 
 class Table:
-    def __init__(self, stdscr, list_of_dicts, column_order):
+    def __init__(self, stdscr, list_of_dicts, column_order, footer=""):
         self.stdscr = stdscr
+        self.maxy, self.maxx = self.stdscr.getmaxyx()
         self.hl = 0
         self.list_of_dicts = list_of_dicts
         self.column_order = column_order
@@ -27,7 +28,7 @@ class Table:
         hl_row_data = {}
         for title, items in self.columns.items():
             title_length = len(title)
-            longest_item = len(max(items, key=length_of_strings_or_ints))
+            longest_item = len(str(max(items, key=length_of_strings_or_ints)))
             width = max(title_length, longest_item) + 1
             title_win = curses.newwin(1, width, 0, xstart)
             title_win.bkgd(" ", color.white_blue)
@@ -38,23 +39,30 @@ class Table:
             itemnum = 0
             pminrow = 0
 
-            if self.hl >= curses.LINES - 2:
-                pminrow = self.hl - curses.LINES + 2
+            if self.hl >= curses.LINES - 3:
+                pminrow = self.hl - curses.LINES + 3
 
             for item in items:
+
                 if itemnum == self.hl:
                     items_win.addstr(itemnum, 0, str(item))
                     items_win.chgat(itemnum, 0, color.white_magenta_bold)
                     hl_row_data[title] = item
                 else:
                     items_win.addstr(itemnum, 0, str(item))
+
                 items_win.noutrefresh(
-                    pminrow, 0, 1, xstart, curses.LINES - 1, xstart + width
+                    pminrow, 0, 1, xstart, self.maxy - 2, self.maxx - 1
                 )
                 itemnum += 1
 
-            curses.doupdate()
             xstart += width
+
+        footer = curses.newwin(1, xstart, self.maxy - 1, 0)
+        footer.bkgd(" ", color.white_blue)
+        footer.addstr(0, 0, f"[{self.hl}/{self.longest_column_length}] (Press ? or F1 for help)")
+        footer.noutrefresh()
+        curses.doupdate()
 
         return hl_row_data
 
