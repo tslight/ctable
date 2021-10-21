@@ -47,10 +47,13 @@ class Table:
         for index, (title, items) in enumerate(self.columns.items()):
             width = column_widths[index]
             titlestr = str(title).encode("ascii", "ignore").decode()
+
             if len(titlestr) >= width:
                 titlestr = f"{title[:width - 2]}.."
+
             title_win = curses.newwin(1, width, 0, xstart)
             title_win.bkgd(" ", color.white_blue)
+
             try:
                 title_win.addstr(0, 0, titlestr)
             except (curses.error):
@@ -62,8 +65,8 @@ class Table:
             itemnum = 0
             pminrow = 0
 
-            if self.hl >= curses.LINES - 3:
-                pminrow = self.hl - curses.LINES + 3
+            if self.hl > self.maxy - 2:
+                pminrow = self.hl - self.maxy + 3
 
             for item in items:
                 cellstr = str(item).encode("ascii", "ignore").decode()
@@ -106,8 +109,8 @@ class Table:
             if key == ord("q"):
                 break
             elif key == curses.KEY_RESIZE:
-                self.stdscr.erase()
                 self.maxy, self.maxx = self.stdscr.getmaxyx()
+                self.stdscr.erase()
                 hl_row_data = self.make_columns()
                 self.stdscr.refresh()
             elif key == ord("j"):
