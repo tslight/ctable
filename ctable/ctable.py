@@ -15,13 +15,15 @@ class Table:
     def __init__(self, stdscr, list_of_dicts, column_order, footer=""):
         self.stdscr = stdscr
         self.maxy, self.maxx = self.stdscr.getmaxyx()
-        self.hl = 0
+        self.current_row = 0
         self.list_of_dicts = list_of_dicts
         self.column_order = column_order
         self.columns = list_of_dicts_to_dict_of_lists(
             self.list_of_dicts, self.column_order
         )
         self.longest_column_length = get_longest_list_in_dict(self.columns)
+        self.current_row_data = {}
+        self.color = Color()
         self.keys = {
             "j, n, DOWN": "Move down a line.",
             "k, p, UP": "Move up a line.",
@@ -50,9 +52,7 @@ class Table:
         return column_widths
 
     def make_columns(self):
-        color = Color()
         xstart = 0
-        hl_row_data = {}
         column_widths = self.get_column_widths()
         for index, (title, items) in enumerate(self.columns.items()):
             width = column_widths[index]
@@ -62,7 +62,7 @@ class Table:
                 titlestr = f"{title[:width - 2]}.."
 
             title_win = curses.newwin(1, width, 0, xstart)
-            title_win.bkgd(" ", color.white_blue)
+            title_win.bkgd(" ", self.color.white_blue)
 
             try:
                 title_win.addstr(0, 0, titlestr)
@@ -75,8 +75,8 @@ class Table:
             itemnum = 0
             pminrow = 0
 
-            if self.hl > self.maxy - 3:
-                pminrow = self.hl - self.maxy + 3
+            if self.current_row > self.maxy - 3:
+                pminrow = self.current_row - self.maxy + 3
 
             for item in items:
                 cellstr = str(item).encode("ascii", "ignore").decode()
@@ -89,9 +89,9 @@ class Table:
                 except (curses.error):
                     pass
 
-                if itemnum == self.hl:
-                    items_win.chgat(itemnum, 0, color.white_magenta_bold)
-                    hl_row_data[title] = item
+                if itemnum == self.current_row:
+                    items_win.chgat(itemnum, 0, self.color.white_magenta_bold)
+                    self.current_row_data[title] = item
 
                 try:
                     items_win.noutrefresh(
@@ -105,12 +105,10 @@ class Table:
             xstart += width
 
         footer = curses.newwin(1, xstart, self.maxy - 1, 0)
-        footer.bkgd(" ", color.white_blue)
-        footer.addstr(0, 0, f"[{self.hl}/{self.longest_column_length}] (Press ? or F1 for help)")
+        footer.bkgd(" ", self.color.white_blue)
+        footer.addstr(0, 0, f"[{self.current_row}/{self.longest_column_length}] (Press ? or F1 for help)")
         footer.noutrefresh()
         curses.doupdate()
-
-        return hl_row_data
 
     def view_dict(self, d):
         win = curses.newwin(self.maxy, self.maxx, 0, 0)
@@ -134,7 +132,7 @@ class Table:
     def init(self):
         while True:
             self.stdscr.noutrefresh()
-            hl_row_data = self.make_columns()
+            self.make_columns()
             key = self.stdscr.getch()
             if key == ord("q") or key == curses.ascii.ESC:
                 break
@@ -142,19 +140,19 @@ class Table:
                 self.maxy, self.maxx = self.stdscr.getmaxyx()
                 self.stdscr.erase()
             elif key == ord("j") or key == curses.KEY_DOWN or key == ord("n"):
-                if self.hl <= self.longest_column_length - 2:
-                    self.hl += 1
+                if self.current_row <= self.longest_column_length - 2:
+                    self.current_row += 1
             elif key == ord("k") or key == curses.KEY_UP or key == ord("p"):
-                if self.hl > 0:
-                    self.hl -= 1
+                if self.current_row > 0:
+                    self.current_row -= 1
             elif key == ord("g") or key == ord("<") or key == curses.KEY_HOME:
-                self.hl = 0
+                self.current_row = 0
             elif key == ord("G") or key == ord(">") or key == curses.KEY_END:
-                self.hl = self.longest_column_length - 1
+                self.current_row = self.longest_column_length - 1
             elif key == ord("\n"):
                 self.init_dict_view(
                     dict_from_list_of_dicts(
-                        self.list_of_dicts, hl_row_data
+                        self.list_of_dicts, self.current_row_data
                     )
                 )
             elif key == ord("?"):
