@@ -8,6 +8,7 @@ from .utils import (
     length_of_strings_or_ints,
 )
 from os import environ
+
 environ.setdefault("ESCDELAY", "12")  # otherwise it takes an age!
 
 
@@ -32,7 +33,7 @@ class Table:
             "ENTER/RETURN": "View row data.",
             "q, ESCAPE": "Exit.",
         }
-        curses.curs_set(False) # no cursor
+        curses.curs_set(False)  # no cursor
 
     def get_column_widths(self):
         column_widths = []
@@ -51,8 +52,51 @@ class Table:
 
         return column_widths
 
-    def make_columns(self):
-        xstart = 0
+    def make_footer(self):
+        footer = curses.newwin(1, self.total_width, self.maxy - 1, 0)
+        footer.bkgd(" ", self.color.white_blue)
+        footerstr = (
+            f"[{self.current_row}/{self.longest_column_length}]"
+            + "(Press ? or F1 for help)"
+        )
+        footer.addstr(0, 0, footerstr)
+        footer.noutrefresh()
+
+    def make_columns(self, title, items, width):
+        items_win = curses.newpad(self.longest_column_length, width)
+
+        itemnum = 0
+        pminrow = 0
+
+        if self.current_row > self.maxy - 3:
+            pminrow = self.current_row - self.maxy + 3
+
+        for item in items:
+            cellstr = str(item).encode("ascii", "ignore").decode()
+
+            if len(cellstr) >= width:
+                cellstr = f"{cellstr[:width - 2]}.."
+
+            try:
+                items_win.addstr(itemnum, 0, cellstr)
+            except (curses.error):
+                pass
+
+            if itemnum == self.current_row:
+                items_win.chgat(itemnum, 0, self.color.white_magenta_bold)
+                self.current_row_data[title] = item
+
+            try:
+                items_win.noutrefresh(
+                    pminrow, 0, 1, self.total_width, self.maxy - 2, self.maxx - 1
+                )
+            except (curses.error):
+                pass
+
+            itemnum += 1
+
+    def make_table(self):
+        self.total_width = 0
         column_widths = self.get_column_widths()
         for index, (title, items) in enumerate(self.columns.items()):
             width = column_widths[index]
@@ -61,7 +105,7 @@ class Table:
             if len(titlestr) >= width:
                 titlestr = f"{title[:width - 2]}.."
 
-            title_win = curses.newwin(1, width, 0, xstart)
+            title_win = curses.newwin(1, width, 0, self.total_width)
             title_win.bkgd(" ", self.color.white_blue)
 
             try:
@@ -70,44 +114,10 @@ class Table:
                 pass
 
             title_win.noutrefresh()
-            items_win = curses.newpad(self.longest_column_length, width)
+            self.make_columns(title, items, width)
+            self.total_width += width
 
-            itemnum = 0
-            pminrow = 0
-
-            if self.current_row > self.maxy - 3:
-                pminrow = self.current_row - self.maxy + 3
-
-            for item in items:
-                cellstr = str(item).encode("ascii", "ignore").decode()
-
-                if len(cellstr) >= width:
-                    cellstr = f"{cellstr[:width - 2]}.."
-
-                try:
-                    items_win.addstr(itemnum, 0, cellstr)
-                except (curses.error):
-                    pass
-
-                if itemnum == self.current_row:
-                    items_win.chgat(itemnum, 0, self.color.white_magenta_bold)
-                    self.current_row_data[title] = item
-
-                try:
-                    items_win.noutrefresh(
-                        pminrow, 0, 1, xstart, self.maxy - 2, self.maxx - 1
-                    )
-                except (curses.error):
-                    pass
-
-                itemnum += 1
-
-            xstart += width
-
-        footer = curses.newwin(1, xstart, self.maxy - 1, 0)
-        footer.bkgd(" ", self.color.white_blue)
-        footer.addstr(0, 0, f"[{self.current_row}/{self.longest_column_length}] (Press ? or F1 for help)")
-        footer.noutrefresh()
+        self.make_footer()
         curses.doupdate()
 
     def view_dict(self, d):
@@ -115,7 +125,7 @@ class Table:
         for index, (key, value) in enumerate(d.items()):
             win.addstr(index, 0, f"{key}: {value}")
             win.noutrefresh()
-        curses.doupdate()
+            curses.doupdate()
 
     def init_dict_view(self, d):
         while True:
@@ -132,7 +142,7 @@ class Table:
     def init(self):
         while True:
             self.stdscr.noutrefresh()
-            self.make_columns()
+            self.make_table()
             key = self.stdscr.getch()
             if key == ord("q") or key == curses.ascii.ESC:
                 break
@@ -150,10 +160,9 @@ class Table:
             elif key == ord("G") or key == ord(">") or key == curses.KEY_END:
                 self.current_row = self.longest_column_length - 1
             elif key == ord("\n"):
-                self.init_dict_view(
-                    dict_from_list_of_dicts(
-                        self.list_of_dicts, self.current_row_data
-                    )
+                og_dict = dict_from_list_of_dicts(
+                    self.list_of_dicts, self.current_row_data
                 )
+                self.init_dict_view(og_dict)
             elif key == ord("?"):
                 self.init_dict_view(self.keys)
