@@ -71,16 +71,16 @@ class Table:
         footer.addstr(0, 0, footerstr)
         footer.noutrefresh()
 
-    def __is_pad_top(self):
+    def is_pad_top(self):
         return self.currow <= 0
 
-    def __is_pad_bottom(self):
-        return self.currow > self.pmaxrow - 3
+    def is_pad_bottom(self):
+        return self.currow > self.pmaxrow
 
-    def __is_scr_top(self):
+    def is_scr_top(self):
         return self.currow <= self.pminrow
 
-    def __is_scr_bottom(self):
+    def is_scr_bottom(self):
         return self.currow > self.smaxrow - 2
 
     def up_pad(self):
@@ -119,23 +119,23 @@ class Table:
             self.first_item()
             return
 
-        if self.__is_pad_bottom():
+        if self.is_pad_bottom():
             self.top_pad()
 
-        if self.__is_scr_bottom():
-            self.pminrow = self.currow - self.smaxrow + 3
+        if self.is_scr_bottom():
+            self.pminrow = self.currow - self.smaxrow + 2
 
-        self.currow += 1  # scroll cursor
+        self.currow += 1
 
     def up_row(self):
         if self.currow < 1:
             self.last_item()
             return
 
-        if self.__is_pad_top():
+        if self.is_pad_top():
             self.bottom_pad()
 
-        if self.__is_scr_top():
+        if self.is_scr_top():
             self.pminrow -= 1
 
         self.currow -= 1
@@ -161,6 +161,18 @@ class Table:
 
         if self.currow < 0:
             self.last_item()
+
+    def recenter(self):
+        smiddle = int(self.smaxrow / 2)
+        pmiddle = self.pminrow + smiddle
+        if self.currow > self.pmaxrow - smiddle:
+            self.bottom_pad()
+        elif self.currow < smiddle:
+            self.top_pad()
+        elif self.currow > pmiddle:
+            self.pminrow += self.currow - pmiddle
+        elif self.currow < pmiddle:
+            self.pminrow -= pmiddle - self.currow
 
     def make_columns(self, title, items, width):
         items_win = curses.newpad(self.pmaxrow, width)
@@ -251,6 +263,8 @@ class Table:
                 self.first_item()
             elif key == ord("G") or key == ord(">") or key == curses.KEY_END:
                 self.last_item()
+            elif key == ord("z") or curses.ascii.ctrl(ord("l")):
+                self.recenter()
             elif key == ord("\n"):
                 og_dict = dict_from_list_of_dicts(self.list_of_dicts, self.currow_data)
                 self.init_dict_view(og_dict)
