@@ -123,7 +123,7 @@ class Table:
             self.top_pad()
 
         if self.__is_scr_bottom():
-            self.pminrow += 1
+            self.pminrow = self.currow - self.smaxrow + 3
 
         self.currow += 1  # scroll cursor
 
@@ -164,14 +164,8 @@ class Table:
 
     def make_columns(self, title, items, width):
         items_win = curses.newpad(self.pmaxrow, width)
-        # items_win.keypad(True)
-        # items_win.scrollok(True)
-        # items_win.idlok(True)
 
         itemnum = 0
-
-        # if self.currow > self.smaxrow:
-        #     self.pminrow = self.currow - self.maxy + 3
 
         for item in items:
             cellstr = str(item).encode("ascii", "ignore").decode()
@@ -179,30 +173,20 @@ class Table:
             if len(cellstr) >= width:
                 cellstr = f"{cellstr[:width - 2]}.."
 
-            # I know this is really bad practice, but because a running curses
-            # session is almost impossible to debug, it's preferable to see how
-            # things have gone wonky rather than just seeing where things went
-            # wonky.
-            try:
-                items_win.addstr(itemnum, 0, cellstr)
-            except (curses.error):
-                pass
+            items_win.addstr(itemnum, 0, cellstr)
 
             if itemnum == self.currow:
                 items_win.chgat(itemnum, 0, self.color.white_magenta_bold)
                 self.currow_data[title] = item
 
-            try:
-                items_win.noutrefresh(
+            items_win.noutrefresh(
                     self.pminrow,
                     self.pmincol,
                     self.sminrow,
                     self.smincol,
                     self.smaxrow,
                     self.smaxcol,
-                )
-            except (curses.error):
-                pass  # Again - I'm sorry programming Gods :-/
+            )
 
             itemnum += 1
 
@@ -218,12 +202,7 @@ class Table:
 
             title_win = curses.newwin(1, width, 0, self.smincol)
             title_win.bkgd(" ", self.color.white_blue)
-
-            try:
-                title_win.addstr(0, 0, titlestr)
-            except (curses.error):
-                pass  # Yes - I know. I'm a terrible person.
-
+            title_win.addstr(0, 0, titlestr)
             title_win.noutrefresh()
             self.make_columns(title, items, width)
             self.smincol += width
