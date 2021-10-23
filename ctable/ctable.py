@@ -263,7 +263,7 @@ class Table:
                 self.first_item()
             elif key == ord("G") or key == ord(">") or key == curses.KEY_END:
                 self.last_item()
-            elif key == ord("z") or curses.ascii.ctrl(ord("l")):
+            elif key == ord("z") or key == curses.ascii.ctrl(ord("l")):
                 self.recenter()
             elif key == ord("\n"):
                 og_dict = dict_from_list_of_dicts(self.list_of_dicts, self.currow_data)
