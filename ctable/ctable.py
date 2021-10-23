@@ -15,8 +15,8 @@ environ.setdefault("ESCDELAY", "12")  # otherwise it takes an age!
 class Table:
     def __init__(self, stdscr, list_of_dicts, column_order, footer=""):
         self.stdscr = stdscr
-        self.maxy, self.maxx = self.stdscr.getmaxyx()
         self.currow = 0
+        self.maxy, self.maxx = self.stdscr.getmaxyx()
 
         # pad data
         self.pminrow = 0
@@ -44,6 +44,12 @@ class Table:
             "q, x, ESCAPE": "Exit.",
         }
         curses.curs_set(False)  # no cursor
+
+    def resize(self):
+        self.maxy, self.maxx = self.stdscr.getmaxyx()
+        self.smaxrow = self.maxy - 2
+        self.smaxcol = self.maxx - 1
+        self.stdscr.erase()
 
     def get_column_widths(self):
         column_widths = []
@@ -185,7 +191,10 @@ class Table:
             if len(cellstr) >= width:
                 cellstr = f"{cellstr[:width - 2]}.."
 
-            items_win.addstr(itemnum, 0, cellstr)
+            try:
+                items_win.addstr(itemnum, 0, cellstr)
+            except (curses.error):
+                pass
 
             if itemnum == self.currow:
                 items_win.chgat(itemnum, 0, self.color.white_magenta_bold)
@@ -243,14 +252,13 @@ class Table:
 
     def init(self):
         while True:
-            self.stdscr.noutrefresh()
+            self.stdscr.refresh()
             self.make_table()
             key = self.stdscr.getch()
             if key == ord("q") or key == curses.ascii.ESC:
                 break
             elif key == curses.KEY_RESIZE:
-                self.maxy, self.maxx = self.stdscr.getmaxyx()
-                self.stdscr.erase()
+                self.resize()
             elif key == ord("j") or key == ord("n") or key == curses.KEY_DOWN:
                 self.down_row()
             elif key == ord("k") or key == ord("p") or key == curses.KEY_UP:
