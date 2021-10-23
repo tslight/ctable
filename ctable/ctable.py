@@ -15,8 +15,8 @@ environ.setdefault("ESCDELAY", "12")  # otherwise it takes an age!
 class Table:
     def __init__(self, stdscr, list_of_dicts, column_order, footer=""):
         self.stdscr = stdscr
-        self.currow = 0
         self.maxy, self.maxx = self.stdscr.getmaxyx()
+        self.currow = 0
 
         # pad data
         self.pminrow = 0
