@@ -247,8 +247,7 @@ class Table:
                 self.stdscr.erase()
                 break
             elif key == curses.KEY_RESIZE:
-                self.maxy, self.maxx = self.stdscr.getmaxyx()
-                self.stdscr.erase()
+                self.resize()
 
     def init(self):
         while True:
