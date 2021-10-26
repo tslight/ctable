@@ -234,7 +234,8 @@ class Table:
     def view_dict(self, d):
         win = curses.newwin(self.maxy, self.maxx, 0, 0)
         for index, (key, value) in enumerate(d.items()):
-            win.addstr(index, 0, f"{key}: {value}")
+            win.addstr(index, 0, f"{key.capitalize()}: {value}")
+            win.chgat(index, 0, len(key) + 1, self.color.yellow_black)
             win.noutrefresh()
             curses.doupdate()
 
