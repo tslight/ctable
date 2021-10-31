@@ -10,7 +10,7 @@ def get_latest_tag():
         cmd_output = subprocess.run(
             ["git", "describe", "--tags", "--abbrev=0"], stdout=subprocess.PIPE
         )
-        return cmd_output.stdout.decode("utf-8")
+        return cmd_output.stdout.strip().decode("utf-8")
     except EnvironmentError:
         print("Couldn't run git to get a version number for setup.py")
 
