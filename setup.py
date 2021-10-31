@@ -6,16 +6,14 @@ import subprocess
 
 
 def get_commit_hash():
-    """Talk to git and find out the tag/hash of our latest commit"""
     try:
-        p = subprocess.Popen(
-            ["git", "describe", "--tags", "--dirty", "--always"], stdout=subprocess.PIPE
+        return (
+            subprocess.check_output(["git", "rev-parse", "--short", "HEAD"])
+            .strip()
+            .decode("utf-8")
         )
     except EnvironmentError:
         print("Couldn't run git to get a version number for setup.py")
-        return
-    ver = p.communicate()[0]
-    return ver.strip()
 
 
 with open("README.md", "r") as fh:
