@@ -71,9 +71,7 @@ class Table:
     def make_footer(self):
         footer = curses.newwin(1, self.smincol, self.maxy - 1, 0)
         footer.bkgd(" ", self.color.white_blue)
-        footerstr = (
-            f"[{self.currow + 1}/{self.pmaxrow}]" + "(Press ? or F1 for help)"
-        )
+        footerstr = f"[{self.currow + 1}/{self.pmaxrow}] (Press ? for help)"
         footer.addstr(0, 0, footerstr)
         footer.noutrefresh()
 
@@ -201,12 +199,12 @@ class Table:
                 self.currow_data[title] = item
 
             items_win.noutrefresh(
-                    self.pminrow,
-                    self.pmincol,
-                    self.sminrow,
-                    self.smincol,
-                    self.smaxrow,
-                    self.smaxcol,
+                self.pminrow,
+                self.pmincol,
+                self.sminrow,
+                self.smincol,
+                self.smaxrow,
+                self.smaxcol,
             )
 
             itemnum += 1
@@ -234,7 +232,7 @@ class Table:
     def view_dict(self, d):
         win = curses.newwin(self.maxy, self.maxx, 0, 0)
         for index, (key, value) in enumerate(d.items()):
-            win.addstr(index, 0, f"{key.capitalize()}: {value}")
+            win.addstr(index, 0, f"{key}: {value}")
             win.chgat(index, 0, len(key) + 1, self.color.yellow_black)
             win.noutrefresh()
             curses.doupdate()
