@@ -1,5 +1,5 @@
 name: Publish Python 🐍 distributions 📦 to PyPI
-on: create
+on: push
 
 jobs:
   build-and-publish-with-tag:
