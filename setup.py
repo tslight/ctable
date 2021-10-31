@@ -8,7 +8,7 @@ import subprocess
 def get_latest_tag():
     try:
         return (
-            subprocess.check_output(["git", "describe", "--tags"])
+            subprocess.check_output(["git", "describe", "--tags", "--abbrev=0"])
             .strip()
             .decode("utf-8")
         )
