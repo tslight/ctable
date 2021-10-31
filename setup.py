@@ -5,10 +5,10 @@ from setuptools import setup, find_packages
 import subprocess
 
 
-def get_commit_hash():
+def get_latest_tag():
     try:
         return (
-            subprocess.check_output(["git", "rev-parse", "--short", "HEAD"])
+            subprocess.check_output(["git", "describe", "--tags"])
             .strip()
             .decode("utf-8")
         )
@@ -21,7 +21,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="ctable",
-    version=get_commit_hash(),
+    version=get_latest_tag(),
     author="Toby Slight",
     author_email="tslight@pm.me",
     description="Curses Tables",
