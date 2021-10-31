@@ -9,7 +9,10 @@ jobs:
     - uses: actions/checkout@master
       with:
         fetch-depth: 0
-    - run: git describe --tags --abbrev=0
+    - run: |
+        git fetch --unshallow --tags
+        echo $?
+        git tag --list
     - name: Set up Python 3.9
       uses: actions/setup-python@v1
       with:
