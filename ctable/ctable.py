@@ -72,7 +72,10 @@ class Table:
         footer = curses.newwin(1, self.smincol, self.maxy - 1, 0)
         footer.bkgd(" ", self.color.white_blue)
         footerstr = f"[{self.currow + 1}/{self.pmaxrow}] (Press ? for help)"
-        footer.addstr(0, 0, footerstr)
+        try:
+            footer.addstr(0, 0, footerstr)
+        except curses.error:
+            pass
         footer.noutrefresh()
 
     def is_pad_top(self):
